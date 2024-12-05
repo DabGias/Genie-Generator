@@ -3,15 +3,27 @@ from random import randint
 import click
 
 from utils.style import info_box
-from utils.files import write_to_file
+from utils.files import (
+    write_to_file,
+    write_to_json
+)
 
+#TODO: Criar erro personalizado e adicionar internacionalização se possível
 
 @click.group()
+@click.help_option(
+    "-h", "--help",
+    help = "Retorna os subcomandos"
+)
 def gen():
     pass
 
 
 @gen.command(help = "Gera números de CPF")
+@click.help_option(
+    "-h", "--help",
+    help = "Retorna os argumentos e opções do subcomando"
+)
 @click.option(
     "-p/-np",
     "--ponctuation/--no-ponctuation",
@@ -27,13 +39,20 @@ def gen():
 )
 @click.option(
     "-o", "--output-file",
-    help = "Controla qual será o arquivo de saída (output)",
+    help = "Controla qual será o arquivo de output",
     default = None
 )
-def cpf(ponctuation: bool, generate: int, output_file: str):
+@click.option(
+    "--json",
+    help = "Retorna os dados em um arquivo JSON",
+    default = None
+)
+def cpf(ponctuation: bool, generate: int, output_file: str, json: str):
     if generate < 1: raise click.UsageError("'-g' / '--generate' deve ser maior ou igual a 1")
+
+    if output_file != None and json != None: raise click.UsageError("'-o' / '--output-file' e '--json' não podem ser usados simultâneamente")
     
-    if output_file != None: cpf_list: list[str] = []
+    if output_file != None or json != None: cpf_list: list[str] = []
 
     for _ in range(generate):
         cpf_chars: list[str]
@@ -56,21 +75,28 @@ def cpf(ponctuation: bool, generate: int, output_file: str):
         cpf_chars = [str(num) for num in cpf_nums]
         cpf_str: str = "".join(cpf_chars)
 
-        if output_file == None and ponctuation: 
+        if (output_file == None and json == None) and ponctuation: 
             click.echo(f"\"{cpf_str[0:3]}.{cpf_str[3:6]}.{cpf_str[6:9]}-{cpf_str[9:11]}\"")
-        elif output_file == None: 
+        elif output_file == None and json == None: 
             click.echo(f"\"{cpf_str}\"")
-        elif output_file != None and ponctuation: 
+        elif (output_file != None or json != None) and ponctuation: 
             cpf_list.append(f"\"{cpf_str[0:3]}.{cpf_str[3:6]}.{cpf_str[6:9]}-{cpf_str[9:11]}\"")
-        elif output_file != None:
+        elif output_file != None or json != None:
             cpf_list.append(f"\"{cpf_str}\"")
 
     if output_file != None: 
         write_to_file(output_file, cpf_list)
         info_box("Tudo certo!", f"Os CPFs foram salvos em: {output_file}" if generate > 1 else f"O CPF foi salvo em: {output_file}")
+    elif json != None:
+        write_to_json(json, cpf_list)
+        info_box("Tudo certo!", f"Os CPFs foram salvos em: {json}" if generate > 1 else f"O CPF foi salvo em: {json}")
 
 
 @gen.command(help = "Gera números de CNPJ")
+@click.help_option(
+    "-h", "--help",
+    help = "Retorna os argumentos e opções do subcomando"
+)
 @click.option(
     "-p/-np",
     "--ponctuation/--no-ponctuation",
@@ -89,10 +115,17 @@ def cpf(ponctuation: bool, generate: int, output_file: str):
     help = "Controla qual será o arquivo de saída (output)",
     default = None
 )
-def cnpj(ponctuation: bool, generate: int, output_file: str):
+@click.option(
+    "--json",
+    help = "Retorna os dados em um arquivo JSON",
+    default = None
+)
+def cnpj(ponctuation: bool, generate: int, output_file: str, json: str):
     if generate < 1: raise click.UsageError("'-g' / '--generate' deve ser maior ou igual a 1")
 
-    if output_file != None: cnpj_list: list[str] = []
+    if output_file != None and json != None: raise click.UsageError("'-o' / '--output-file' e '--json' não podem ser usados simultâneamente")
+
+    if output_file != None or json != None: cnpj_list: list[str] = []
 
     for _ in range(generate):
         cnpj_chars: list[str]
@@ -121,18 +154,21 @@ def cnpj(ponctuation: bool, generate: int, output_file: str):
         cnpj_chars: list[str] = [str(num) for num in cnpj_nums]
         cnpj_str: str = "".join(cnpj_chars)
 
-        if output_file == None and ponctuation:
+        if (output_file == None and json == None) and ponctuation:
             click.echo(f"\"{cnpj_str[0:2]}.{cnpj_str[2:5]}.{cnpj_str[5:8]}/{cnpj_str[8:12]}-{cnpj_str[12:14]}\"")
-        elif output_file == None:
+        elif output_file == None and json == None:
             click.echo(f"\"{cnpj_str}\"")
-        elif output_file != None and ponctuation:
+        elif (output_file != None or json != None) and ponctuation:
             cnpj_list.append(f"\"{cnpj_str[0:2]}.{cnpj_str[2:5]}.{cnpj_str[5:8]}/{cnpj_str[8:12]}-{cnpj_str[12:14]}\"")
-        elif output_file != None:
+        elif output_file != None or json != None:
             cnpj_list.append(f"\"{cnpj_str}\"")
 
     if output_file != None: 
         write_to_file(output_file, cnpj_list)
         info_box("Tudo certo!", f"Os CNPJs foram salvos em: {output_file}" if generate > 1 else f"O CNPJ foi salvo em: {output_file}")
+    elif json != None:
+        write_to_json(json, cnpj_list)
+        info_box("Tudo certo!", f"Os CNPJs foram salvos em: {json}" if generate > 1 else f"O CNPJ foi salvo em: {json}")
 
 
 if __name__ == "__main__":
